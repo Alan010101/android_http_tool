@@ -1,9 +1,5 @@
 package com.model;
 
-/**
- * Created by wangbiao on 2017/7/27.
- */
-
 public class User {
     private Integer id;
 

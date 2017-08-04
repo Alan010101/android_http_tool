@@ -10,13 +10,14 @@ import com.alan.http.BaseActivity;
 import com.alan.http.FileCallBack;
 import com.alan.http.JsonCallBack;
 import com.alan.http.Request;
-import com.alan.http.RequestTask;
+import com.alan.http.RequestManager;
 import com.model.User;
 
 import java.io.File;
 
 
 public class MainActivity extends BaseActivity {
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,10 +51,19 @@ public class MainActivity extends BaseActivity {
                                 }
                             }
                         }
+
+                        @Override
+                        public User preRequest() {
+                            return super.preRequest();
+                        }
+
+                        @Override
+                        public User postRequest(User user) {
+                            return super.postRequest(user);
+                        }
                     });
                     request.setGlobalExcetionListener(MainActivity.this);
-                    RequestTask requestTask = new RequestTask(request);
-                    requestTask.execute();
+                    RequestManager.getInstance().performRequest(request);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -63,18 +73,17 @@ public class MainActivity extends BaseActivity {
         testBtn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final Request request = new Request("http://192.157.254.120/20170614beidian.mp3");
-                final RequestTask requestTask = new RequestTask(request);
-                String path = Environment.getExternalStorageDirectory()+ File.separator+"/nd/111.mp3";
+//                final Request request = new Request("http://192.157.254.120/20170614beidian.mp3");
+                final Request request = new Request("http://miniui.com/scripts/miniui/miniui.js");
+                String path = Environment.getExternalStorageDirectory()+ File.separator+"/traces/111.js";
                 request.setCallback(new FileCallBack() {
 
                     @Override
                     public void onProgressUpdated(int curLen, int totalLen) {
                         System.out.println("download:"+curLen+"/"+totalLen);
-                        if(curLen*100/totalLen>50){
-                            requestTask.cancel(true);
-                            request.cancel();
-                        }
+//                        if(curLen*100/totalLen>50){
+//                            request.cancel();
+//                        }
                     }
 
                     @Override
@@ -88,7 +97,8 @@ public class MainActivity extends BaseActivity {
                     }
                 }.setCachePath(path));
                 request.enableProgressUpdated(true);
-                requestTask.execute();
+                request.setTag(toString());
+                RequestManager.getInstance().performRequest(request);
             }
         });
     }

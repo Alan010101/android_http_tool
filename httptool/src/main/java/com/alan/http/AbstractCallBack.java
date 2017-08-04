@@ -1,9 +1,13 @@
 package com.alan.http;
 
+import android.util.Log;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 
 /**
  * Created by wangbiao on 2017/8/1.
@@ -28,7 +32,15 @@ public abstract class AbstractCallBack<T> implements ICallBack<T> {
             if (status == 200) {
                 if (path == null) {
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    InputStream in = connection.getInputStream();
+                    InputStream in = null;
+                    String encoding = connection.getContentEncoding();
+                    if(encoding!=null&&"gzip".equalsIgnoreCase(encoding)){
+                        in = new GZIPInputStream(connection.getInputStream());
+                    }else if(encoding!=null&&"deflate".equalsIgnoreCase(encoding)){
+                        in = new InflaterInputStream(connection.getInputStream());
+                    }else{
+                        in = connection.getInputStream();
+                    }
                     byte[] buf = new byte[2048];
                     int len;
                     while ((len = in.read(buf)) != -1) {
@@ -40,7 +52,8 @@ public abstract class AbstractCallBack<T> implements ICallBack<T> {
                     out.close();
                     checkIfCancelled();
                     String result = new String(out.toByteArray());
-                    return bindData(result);
+                    T t = bindData(result);
+                    return postRequest(t);
                 } else {
                     FileOutputStream out = new FileOutputStream(path);
                     int totalLen = connection.getContentLength();
@@ -86,7 +99,18 @@ public abstract class AbstractCallBack<T> implements ICallBack<T> {
 
     public void checkIfCancelled() throws AppException {
         if(isCancelled){
+            Log.e("download","AbstractCallBack checkIfCancelled invoked!");
             throw new AppException("the request is cancelled",AppException.ErrorType.CANCEL);
         }
+    }
+
+    @Override
+    public T postRequest(T t) {
+        return t;
+    }
+
+    @Override
+    public T preRequest() {
+        return null;
     }
 }
